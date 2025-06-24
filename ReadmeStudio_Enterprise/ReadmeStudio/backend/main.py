@@ -15,7 +15,7 @@ app = FastAPI()
 
 # Get absolute paths for static and templates directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(os.path.dirname(BASE_DIR), '..', 'static')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 
 # Mount static files
