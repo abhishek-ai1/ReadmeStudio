@@ -1,0 +1,11 @@
+body { background: var(--bg); color: var(--text); }
+.container { max-width: 900px; margin: 40px auto; background: var(--surface); border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+textarea { width: 100%; min-height: 200px; font-family: monospace; font-size: 1rem; margin-bottom: 16px; background: var(--surface); color: var(--text); }
+.preview { border: 1px solid var(--border); background: var(--surface); padding: 16px; border-radius: 6px; min-height: 200px; color: var(--text); }
+.actions { margin-bottom: 16px; }
+.actions button, .actions input[type=file] { margin-right: 8px; }
+.section-title { margin-top: 32px; margin-bottom: 8px; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
+body.dark-mode .container { background: var(--surface-dark); }
+body.dark-mode textarea, body.dark-mode .preview { background: var(--surface-dark); color: var(--text-dark); border-color: var(--border-dark); }
+body.dark-mode .section-title { color: var(--accent); } 

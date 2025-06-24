@@ -1,0 +1,1240 @@
+{% extends 'base.html' %}
+{% block title %}ReadmeStudio - Block Editor{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/static/github-markdown.css">
+    <style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --accent: #38bdf8;
+  --bg: #f4f6fa;
+  --bg-dark: #181a20;
+  --surface: #fff;
+  --surface-dark: #23262f;
+  --text: #1a202c;
+  --text-dark: #e0e6ed;
+  --sidebar: #f1f5f9;
+  --sidebar-dark: #23262f;
+  --border: #d1d5db;
+  --border-dark: #353945;
+  --shadow: 0 2px 8px #0001;
+  --shadow-dark: 0 2px 8px #0004;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Inter', Arial, sans-serif; transition: background 0.3s, color 0.3s; }
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  min-height: 64px;
+  height: auto;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: var(--shadow);
+  padding: 0 32px;
+  overflow: visible;
+  transition: background 0.3s, border 0.3s;
+}
+.header .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+.header .actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+.header-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #2563eb22;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  min-width: 110px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  height: 38px;
+}
+.header-btn.icon {
+  min-width: 38px;
+  width: 38px;
+  padding: 0;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+.header-btn.icon:hover {
+  background: var(--primary);
+  color: #fff;
+}
+.header-btn.accent {
+  background: var(--accent);
+  color: #fff;
+}
+.header-btn.primary {
+  background: var(--primary);
+  color: #fff;
+}
+.header-btn:hover {
+  background: var(--primary-dark);
+  color: #fff;
+}
+#dark-mode-toggle { background: var(--surface); color: var(--primary); border: 1.5px solid var(--primary); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
+#dark-mode-toggle:hover { background: var(--primary); color: #fff; }
+.readme-layout { display: flex; max-width: 1200px; margin: 80px auto 0 auto; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); min-height: 80vh; transition: background 0.3s; }
+.sidebar {
+    width: 270px;
+    min-width: 220px;
+    max-width: 320px;
+    background: var(--sidebar);
+    border-right: 1.5px solid var(--border);
+    padding: 32px 12px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: transform 0.35s cubic-bezier(.4,2,.6,1), background 0.3s, border 0.3s, box-shadow 0.3s;
+    box-shadow: 2px 0 16px #2563eb11;
+    border-radius: 16px 0 0 16px;
+    position: relative;
+    z-index: 20;
+    opacity: 0.98;
+}
+.sidebar.collapsed {
+    transform: translateX(-100%);
+    box-shadow: none;
+}
+#sidebar-toggle {
+    position: absolute;
+    top: 18px;
+    right: -18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px #0002;
+    cursor: pointer;
+    z-index: 30;
+    transition: background 0.2s, color 0.2s, transform 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+#sidebar-toggle:hover {
+    background: var(--primary-dark);
+    transform: scale(1.08);
+}
+.sidebar h2 {
+    font-size: 1.15rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    font-weight: 800;
+    text-shadow: 0 1px 0 #fff4;
+}
+.block-search {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    margin-bottom: 14px;
+    font-size: 1.05rem;
+    background: var(--surface);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s, border 0.2s;
+    box-shadow: 0 1px 4px #2563eb08;
+}
+.block-template-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.block-template {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    transition: background 0.2s, border 0.2s, color 0.2s, box-shadow 0.2s;
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: 0 1px 4px #2563eb08;
+    opacity: 0.98;
+}
+.block-template:hover {
+    background: var(--primary);
+    color: #fff;
+    border: 1.5px solid var(--primary);
+    box-shadow: 0 2px 8px #2563eb22;
+}
+.block-template i {
+    font-size: 1.25rem;
+    opacity: 0.85;
+}
+.block-template span {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+.block-editor-main { flex: 1; padding: 40px 0; }
+.block-list { list-style: none; margin: 0; padding: 0 0 0 0; }
+.block-item { background: var(--surface); border-radius: 10px; margin: 18px 32px; padding: 18px 18px 10px 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; transition: box-shadow 0.2s, background 0.3s; border: 1.5px solid var(--border); }
+.block-item.collapsed .block-content { display: none; }
+.block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.block-type { font-weight: 600; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+.block-actions { margin-left: auto; display: flex; gap: 8px; }
+.block-actions button { background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.2s, color 0.2s; }
+.block-actions button:hover { background: #e0e7ff; color: var(--primary-dark); }
+.block-content textarea { width: 100%; min-height: 60px; font-family: 'Fira Mono', monospace; font-size: 1rem; border-radius: 6px; border: 1.5px solid var(--border); padding: 10px; background: var(--surface); color: var(--text); margin-bottom: 8px; transition: background 0.3s, color 0.3s; }
+.block-content textarea:focus { border: 1.5px solid var(--primary); outline: none; }
+.block-preview { border: 1px solid var(--border); background: #f9fafb; border-radius: 6px; padding: 10px; min-height: 30px; font-size: 0.98rem; margin-bottom: 4px; transition: background 0.3s, color 0.3s; }
+.add-block-btn { display: block; margin: 24px auto 0 auto; background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 12px 32px; font-size: 1.1rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); transition: background 0.2s; }
+.add-block-btn:hover { background: var(--primary-dark); }
+.export-actions { display: flex; justify-content: center; gap: 12px; margin-top: 32px; }
+.export-actions button { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px #f59e4211; }
+.export-actions button:hover { background: var(--primary); }
+.emoji-btn { font-size: 1.2rem; background: none; border: none; cursor: pointer; margin-left: 4px; }
+.emoji-picker { display: none; position: absolute; z-index: 1000; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 10px; max-width: 300px; max-height: 200px; overflow: auto; }
+@media (max-width: 1100px) {
+  .header .actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header {
+    padding: 8px 8px;
+    min-height: 80px;
+    height: auto;
+  }
+}
+@media (max-width: 700px) { .block-editor-main { padding: 10px 0; } .block-item { margin: 10px 2vw; padding: 10px 6px 6px 6px; } }
+body.dark-mode {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+body.dark-mode .header { background: var(--surface-dark); border-color: var(--border-dark); box-shadow: var(--shadow-dark); }
+body.dark-mode .readme-layout { background: var(--surface-dark); }
+body.dark-mode .sidebar { background: var(--sidebar-dark); border-color: var(--border-dark); }
+body.dark-mode .block-search, body.dark-mode .block-content textarea { background: var(--surface-dark); color: var(--text-dark); border-color: var(--border-dark); }
+body.dark-mode .block-template { background: var(--surface-dark); color: var(--text-dark); border-color: var(--border-dark); }
+body.dark-mode .block-template:hover { background: var(--primary-dark); color: #fff; border-color: var(--primary-dark); }
+body.dark-mode .block-type { color: var(--accent); }
+body.dark-mode .block-item { background: #23262f; border-color: var(--border-dark); }
+body.dark-mode .block-preview { background: #181a20; color: var(--text-dark); border-color: var(--border-dark); }
+body.dark-mode .emoji-picker { background: var(--surface-dark); border-color: var(--border-dark); box-shadow: var(--shadow-dark); }
+body.dark-mode .add-block-btn { background: var(--primary-dark); }
+body.dark-mode .export-actions button { background: var(--primary-dark); }
+body.dark-mode .export-actions button:hover { background: var(--accent); }
+/* Add hover/focus effects */
+button, .block-template, .add-block-btn, .block-actions button, .emoji-btn {
+    transition: box-shadow 0.2s, background 0.2s, color 0.2s, border 0.2s, transform 0.2s;
+}
+button:hover, .block-template:hover, .add-block-btn:hover, .block-actions button:hover, .emoji-btn:hover {
+    box-shadow: 0 2px 8px #2563eb22;
+    transform: translateY(-2px) scale(1.03);
+}
+button:focus, .block-template:focus, .add-block-btn:focus, .block-actions button:focus, .emoji-btn:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+/* Animate dark mode toggle */
+#dark-mode-toggle.spin i {
+    animation: spin 0.4s linear;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* Sidebar collapse */
+#sidebar { will-change: transform; }
+@keyframes bgmove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100vw 100vh; }
+}
+#fab-add-block { box-shadow: 0 2px 8px #2563eb44; }
+#fab-add-block:hover { background: var(--primary-dark); }
+#toc { opacity: 0.98; }
+#toc ul li:hover { text-decoration: underline; }
+#md-viewer-content.markdown-body {
+  background: #fff !important;
+  color: #222 !important;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 8px #0001;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+body.dark-mode #md-viewer-content.markdown-body {
+  background: #23262f !important;
+  color: #e0e6ed !important;
+  border: 1.5px solid var(--border-dark);
+  box-shadow: 0 2px 8px #0004;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+body.dark-mode #md-file-name {
+  color: var(--accent);
+  background: var(--surface-dark);
+}
+body.dark-mode #upload-md-progress-bar {
+  background: linear-gradient(90deg, var(--primary-dark), var(--accent));
+}
+body.dark-mode #upload-md-progress-label {
+  color: var(--accent);
+}
+    </style>
+{% endblock %}
+{% block content %}
+<div class="header">
+  <div class="brand"><i class="fa fa-book"></i> ReadmeStudio</div>
+  <div class="actions">
+    <button class="header-btn accent" id="pro-readme-btn" title="Generate a professional README template in ReadmeStudio">Professional README</button>
+    <button class="header-btn" onclick="exportMarkdown()"><i class="fa fa-download"></i> Export .md</button>
+    <button class="header-btn" onclick="exportHTML()"><i class="fa fa-file-code"></i> Export HTML</button>
+    <button class="header-btn" onclick="exportPDF()"><i class="fa fa-file-pdf"></i> Export PDF</button>
+    <button class="header-btn" onclick="copyMarkdown()"><i class="fa fa-copy"></i> Copy Markdown</button>
+    <button class="header-btn icon" id="dark-mode-toggle" title="Toggle dark mode"><i class="fa fa-moon"></i></button>
+    <button class="header-btn primary" id="upload-md-btn" title="Upload a markdown file to ReadmeStudio">Upload .md</button>
+  </div>
+</div>
+<div class="readme-layout">
+    <aside class="sidebar" id="sidebar">
+        <button id="sidebar-toggle" title="Collapse sidebar"><i class="fa fa-chevron-left" id="sidebar-toggle-icon"></i></button>
+        <h2>Blocks</h2>
+        <input class="block-search" id="block-search" type="text" placeholder="Search blocks..." oninput="renderBlockTemplates()">
+        <ul class="block-template-list" id="block-template-list"></ul>
+    </aside>
+    <div class="block-editor-main">
+        <ul class="block-list" id="block-list"></ul>
+        <button class="add-block-btn" onclick="addBlock()" style="display:block;margin:24px auto 0 auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:1.1rem;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:background 0.2s;"> <i class="fa fa-plus"></i> Add Block</button>
+        <input type="file" id="file-upload" accept=".md,.markdown,.txt" style="display:none;" onchange="uploadFile(event)">
+        <div id="emoji-picker" class="emoji-picker"></div>
+    </div>
+</div>
+<footer style="margin-top:32px;text-align:center;color:#888;font-size:0.98rem;padding:18px 0 8px 0;">&copy; {{ year }} ReadmeStudio. All rights reserved.</footer>
+<!-- Toast notification container -->
+<div id="toast" style="position:fixed;bottom:32px;right:32px;z-index:9999;min-width:180px;max-width:320px;padding:14px 24px;background:var(--primary);color:#fff;border-radius:8px;box-shadow:0 2px 8px #0004;display:none;font-size:1.05rem;font-weight:500;transition:opacity 0.3s,transform 0.3s;"></div>
+<!-- Animated background gradient -->
+<div id="bg-gradient" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;background:linear-gradient(120deg,#2563eb11 0%,#38bdf822 100%);animation:bgmove 12s linear infinite alternate;"></div>
+<!-- Sticky Table of Contents -->
+<nav id="toc" style="position:fixed;top:80px;right:24px;z-index:10;background:var(--surface);border-radius:8px;box-shadow:0 2px 8px #0001;padding:12px 18px;min-width:160px;max-width:220px;display:none;transition:opacity 0.3s;">
+  <div style="font-weight:700;color:var(--primary);margin-bottom:8px;">Sections</div>
+  <ul id="toc-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;"></ul>
+</nav>
+<!-- Floating Add Block button for mobile -->
+<button id="fab-add-block" title="Add Block to ReadmeStudio" style="position:fixed;bottom:32px;left:32px;z-index:999;background:var(--primary);color:#fff;border:none;border-radius:50%;width:56px;height:56px;box-shadow:0 2px 8px #2563eb44;font-size:2rem;display:none;align-items:center;justify-content:center;transition:background 0.2s;"><i class="fa fa-plus"></i></button>
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;display:none;"></canvas>
+<!-- Badge Picker Modal -->
+<div id="badge-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;z-index:10000;">
+  <div style="background:var(--surface);padding:32px 24px;border-radius:14px;min-width:340px;box-shadow:0 2px 16px #0002;">
+    <h3 style="margin-top:0;color:var(--primary);">Add Badges (ReadmeStudio)</h3>
+    <div id="badge-list" style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-bottom:18px;"></div>
+    <input id="custom-badge-url" type="text" placeholder="Paste custom badge URL..." style="width:100%;padding:8px 10px;font-size:1rem;margin-bottom:12px;">
+    <button id="add-badge-btn" style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Add Badge</button>
+    <button id="close-badge-modal" style="margin-left:10px;background:var(--sidebar);color:var(--primary);border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Close</button>
+  </div>
+</div>
+<!-- Linting/Validation warning -->
+<div id="lint-warning" style="position:fixed;top:60px;right:32px;z-index:9999;background:#fffbe6;color:#b45309;border:1.5px solid #fbbf24;padding:10px 18px;border-radius:8px;box-shadow:0 2px 8px #fbbf2444;font-size:1.02rem;font-weight:500;display:none;align-items:center;gap:8px;"><i class="fa fa-exclamation-triangle"></i> <span id="lint-msg"></span></div>
+<!-- Upload .md Modal -->
+<div id="upload-md-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;z-index:10000;">
+  <div style="background:var(--surface);padding:32px 24px;border-radius:14px;min-width:340px;box-shadow:0 2px 16px #0002;display:flex;flex-direction:column;align-items:center;">
+    <h3 style="margin-top:0;color:var(--primary);">Upload Markdown File</h3>
+    <div style="width:100%;display:flex;flex-direction:column;align-items:center;margin-bottom:18px;">
+      <input id="upload-md-input" type="file" accept=".md,.markdown,.txt" style="display:none;">
+      <button id="choose-md-file-btn" style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Choose File</button>
+      <span id="md-file-name" style="margin-top:10px;font-size:1.02rem;font-weight:500;color:var(--primary);background:var(--sidebar);padding:4px 12px;border-radius:6px;display:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    </div>
+    <div id="upload-md-progress-container" style="display:none;width:100%;margin-bottom:12px;">
+      <div style="width:100%;background:var(--sidebar);border-radius:20px;overflow:hidden;height:22px;box-shadow:0 1px 4px #0001;">
+        <div id="upload-md-progress-bar" style="height:22px;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width 0.2s;"></div>
+      </div>
+      <div id="upload-md-progress-label" style="margin-top:4px;text-align:center;font-size:0.98rem;font-weight:600;color:var(--primary);"></div>
+    </div>
+    <button id="scan-md-btn" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;" disabled>Scan</button>
+    <button id="close-upload-md-modal" style="margin-top:10px;background:var(--sidebar);color:var(--primary);border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Close</button>
+  </div>
+</div>
+<!-- README Viewer Modal -->
+<div id="md-viewer-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;z-index:10001;">
+  <div style="background:var(--surface);padding:32px 24px 18px 24px;border-radius:14px;min-width:420px;max-width:90vw;max-height:90vh;box-shadow:0 2px 16px #0002;display:flex;flex-direction:column;align-items:stretch;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-weight:700;color:var(--primary);font-size:1.1rem;">README Viewer</div>
+      <div>
+        <button id="export-md-html" style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:1rem;font-weight:600;cursor:pointer;margin-right:8px;">Export HTML</button>
+        <button id="export-md-pdf" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:1rem;font-weight:600;cursor:pointer;">Export PDF</button>
+        <button id="close-md-viewer-modal" style="margin-left:10px;background:var(--sidebar);color:var(--primary);border:none;border-radius:6px;padding:6px 14px;font-size:1rem;font-weight:600;cursor:pointer;">Close</button>
+      </div>
+    </div>
+    <div id="md-viewer-content" class="markdown-body" style="overflow:auto;max-height:60vh;border:1px solid var(--border);background:var(--surface);padding:16px;border-radius:8px;"></div>
+  </div>
+</div>
+<!-- Add a hidden export container for clean export -->
+<div id="md-export-container" style="display:none;"></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+// --- Enable GitHub Flavored Markdown (GFM) in marked ---
+if (window.marked) {
+  marked.setOptions({
+    gfm: true,
+    breaks: true,
+    tables: true,
+    headerIds: true,
+    smartLists: true,
+    smartypants: false,
+    mangle: false // Prevents email mangling
+  });
+}
+// --- Dark mode toggle ---
+const darkModeBtn = document.getElementById('dark-mode-toggle');
+function setDarkMode(on) {
+    if (on) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('readmestudio-dark', '1');
+        darkModeBtn.innerHTML = '<i class="fa fa-sun"></i>';
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('readmestudio-dark', '0');
+        darkModeBtn.innerHTML = '<i class="fa fa-moon"></i>';
+    }
+}
+darkModeBtn.onclick = () => setDarkMode(!document.body.classList.contains('dark-mode'));
+if (localStorage.getItem('readmestudio-dark') === '1' || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    setDarkMode(true);
+}
+// --- Block Templates ---
+const BLOCK_TEMPLATES = [
+    { type: 'section-header', label: 'Section Header', icon: 'fa-heading', md: '## 🚀 Section Title' },
+    { type: 'description', label: 'Description', icon: 'fa-align-left', md: 'Add a short project description here.' },
+    { type: 'badges', label: 'Badges', icon: 'fa-certificate', md: '![badge](https://img.shields.io/badge/example-badge-blue)' },
+    { type: 'tech-stack', label: 'Tech Stack', icon: 'fa-tools', md: '## 🧰 Tech Stack\n- Python 3.8+\n- ssl, socket, datetime\n- dnspython\n- json, os' },
+    { type: 'project-structure', label: 'Project Structure', icon: 'fa-sitemap', md: '## 📦 Project Structure\n```\nScanSafe-SSL/\n├── main.py\n├── requirements.txt\n├── reports/\n│   └── ssl_report.json\n├── README.md\n```' },
+    { type: 'sample-output', label: 'Sample Output', icon: 'fa-file-code', md: '## 🧪 Sample Output\n```json\n[\n  {\n    "domain": "google.com",\n    "issuer": "Google Trust Services LLC"\n  }\n]\n```' },
+    { type: 'why-use', label: 'Why Use', icon: 'fa-lightbulb', md: '## 🧠 Why Use ScanSafe?\n- Prevent SSL expiry downtime\n- Improve DNS transparency and security' },
+    { type: 'future-enhancements', label: 'Future Enhancements', icon: 'fa-magic', md: '## 🔮 Future Enhancements\n- PDF / HTML report generation\n- CLI input using argparse' },
+    { type: 'features', label: 'Features', icon: 'fa-list', md: '- Feature 1\n- Feature 2' },
+    { type: 'contributing', label: 'Contributing', icon: 'fa-users', md: 'Contributions are welcome! Please open an issue or submit a pull request.' },
+    { type: 'license', label: 'License', icon: 'fa-balance-scale', md: 'This project is licensed under the MIT License.' },
+    { type: 'author', label: 'Author', icon: 'fa-user', md: 'Author: Your Name' },
+    { type: 'acknowledgements', label: 'Acknowledgements', icon: 'fa-heart', md: 'Thanks to everyone who contributed!' },
+    { type: 'faq', label: 'FAQ', icon: 'fa-question-circle', md: '### FAQ\n**Q:** Question?\n**A:** Answer.' },
+    { type: 'support', label: 'Support', icon: 'fa-hands-helping', md: 'For support, open an issue or contact me.' },
+    { type: 'roadmap', label: 'Roadmap', icon: 'fa-road', md: '- [ ] Feature 1\n- [ ] Feature 2' },
+    { type: 'screenshots', label: 'Screenshots', icon: 'fa-image', md: '![screenshot](screenshot.png)' },
+    { type: 'demo', label: 'Demo', icon: 'fa-video', md: '[Demo Link](https://example.com)' },
+    { type: 'contact', label: 'Contact', icon: 'fa-envelope', md: 'Email: your@email.com' },
+];
+let blocks = [];
+function renderBlockTemplates() {
+    const search = document.getElementById('block-search').value.toLowerCase();
+    const list = document.getElementById('block-template-list');
+    list.innerHTML = '';
+    BLOCK_TEMPLATES.filter(b => b.label.toLowerCase().includes(search)).forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'block-template';
+        li.onclick = () => { addBlock(b.type); };
+        li.innerHTML = `<i class="fa ${b.icon}"></i> <span>${b.label}</span>`;
+        list.appendChild(li);
+    });
+}
+function renderBlocks() {
+    const list = document.getElementById('block-list');
+    list.innerHTML = '';
+    blocks.forEach((block, idx) => {
+        const li = document.createElement('li');
+        li.className = 'block-item' + (block.collapsed ? ' collapsed' : '');
+        li.setAttribute('data-id', idx);
+        // Header
+        const header = document.createElement('div');
+        header.className = 'block-header';
+        // Drag handle
+        const drag = document.createElement('span');
+        drag.innerHTML = '<i class="fa fa-grip-vertical"></i>';
+        drag.style.cursor = 'grab';
+        header.appendChild(drag);
+        // Type & icon
+        const typeLabel = document.createElement('span');
+        typeLabel.className = 'block-type';
+        const template = BLOCK_TEMPLATES.find(bt => bt.type === block.type);
+        typeLabel.innerHTML = `<i class=\"fa ${template ? template.icon : 'fa-align-left'}\"></i> ${template ? template.label : block.type}`;
+        header.appendChild(typeLabel);
+        // Actions
+        const actions = document.createElement('div');
+        actions.className = 'block-actions';
+        // Settings (for license and socials blocks)
+        const settingsBtn = document.createElement('button');
+        settingsBtn.innerHTML = '<i class="fa fa-cog"></i>';
+        if (block.type === 'license') {
+            settingsBtn.title = 'Edit license settings';
+            settingsBtn.onclick = () => openLicenseSettings(idx);
+            settingsBtn.disabled = false;
+            settingsBtn.style.opacity = '1';
+            settingsBtn.style.cursor = 'pointer';
+        } else if (block.type === 'socials') {
+            settingsBtn.title = 'Edit socials settings';
+            settingsBtn.onclick = () => openSocialsSettings(idx);
+            settingsBtn.disabled = false;
+            settingsBtn.style.opacity = '1';
+            settingsBtn.style.cursor = 'pointer';
+        } else {
+            settingsBtn.title = 'No settings available for this block';
+            settingsBtn.disabled = true;
+            settingsBtn.style.opacity = '0.5';
+            settingsBtn.style.cursor = 'not-allowed';
+        }
+        actions.appendChild(settingsBtn);
+        // Collapse/expand
+        const collapseBtn = document.createElement('button');
+        collapseBtn.innerHTML = block.collapsed ? '<i class="fa fa-chevron-down"></i>' : '<i class="fa fa-chevron-up"></i>';
+        collapseBtn.onclick = () => { block.collapsed = !block.collapsed; renderBlocks(); };
+        actions.appendChild(collapseBtn);
+        // Emoji
+        const emojiBtn = document.createElement('button');
+        emojiBtn.className = 'emoji-btn';
+        emojiBtn.innerHTML = '<i class="fa fa-smile"></i>';
+        emojiBtn.title = 'Insert emoji';
+        emojiBtn.onclick = e => {
+            try {
+                openEmojiPicker(idx, e);
+            } catch (err) {
+                console.warn('Failed to open emoji picker:', err);
+            }
+        };
+        actions.appendChild(emojiBtn);
+        // Remove
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        removeBtn.onclick = () => { blocks.splice(idx, 1); renderBlocks(); };
+        actions.appendChild(removeBtn);
+        header.appendChild(actions);
+        li.appendChild(header);
+        // Content
+        const content = document.createElement('div');
+        content.className = 'block-content';
+        // Textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = block.text;
+        textarea.oninput = e => { block.text = e.target.value; updatePreview(idx); };
+        if (block.type === 'section-header') {
+            // Section Header block: emoji picker + title input
+            const headerRow = document.createElement('div');
+            headerRow.style.display = 'flex';
+            headerRow.style.alignItems = 'center';
+            headerRow.style.gap = '10px';
+            // Emoji picker
+            const emojiInput = document.createElement('input');
+            emojiInput.type = 'text';
+            emojiInput.value = block.emoji || '🚀';
+            emojiInput.maxLength = 2;
+            emojiInput.style.fontSize = '1.5rem';
+            emojiInput.style.width = '2.5em';
+            emojiInput.title = 'Section emoji';
+            emojiInput.oninput = e => { block.emoji = e.target.value; updatePreview(idx); };
+            headerRow.appendChild(emojiInput);
+            // Title input
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.value = block.title || 'Section Title';
+            titleInput.placeholder = 'Section Title';
+            titleInput.style.fontSize = '1.1rem';
+            titleInput.style.flex = '1';
+            titleInput.title = 'Section title';
+            titleInput.oninput = e => { block.title = e.target.value; updatePreview(idx); };
+            headerRow.appendChild(titleInput);
+            content.appendChild(headerRow);
+            // Hide textarea for section-header
+            textarea.style.display = 'none';
+            block.text = `## ${block.emoji || '🚀'} ${block.title || 'Section Title'}`;
+        }
+        content.appendChild(textarea);
+        // Preview
+        const preview = document.createElement('div');
+        preview.className = 'block-preview markdown-body';
+        preview.id = 'preview-' + idx;
+        preview.innerHTML = marked.parse(block.text);
+        content.appendChild(preview);
+        li.appendChild(content);
+        list.appendChild(li);
+    });
+    Sortable.create(list, {
+        animation: 150,
+        handle: '.fa-grip-vertical',
+        onEnd: function (evt) {
+            const [moved] = blocks.splice(evt.oldIndex, 1);
+            blocks.splice(evt.newIndex, 0, moved);
+            renderBlocks();
+        }
+    });
+    updateTOC();
+}
+function addBlock(type) {
+    let template = BLOCK_TEMPLATES.find(b => b.type === type);
+    if (!template) template = BLOCK_TEMPLATES[0];
+    blocks.push({ type: template.type, text: template.md, collapsed: false });
+    renderBlocks();
+}
+function updatePreview(idx) {
+    const preview = document.getElementById('preview-' + idx);
+    if (preview) preview.innerHTML = marked.parse(blocks[idx].text);
+}
+function openEmojiPicker(idx, event) {
+    const picker = document.getElementById('emoji-picker');
+    picker.innerHTML = '';
+    const emojis = ['😀','😃','😄','😁','😆','😅','😂','🙂','🙃','😉','😊','😍','🥰','😎','🤓','😜','🤩','🥳','😇','🤔','😏','😬','😭','😡','👍','👎','👏','🙏','🔥','✨','🚀','💡','✅','❌','⚡','🎉','📦','📚','📝','🔗','💻','📁','📄','🖼️','🔒','🔓','🔑','🔔','🔕','⭐','🌟','💯','🆗','🆒','🆕','🆙','🆓','🆖','🅰️','🅱️','🅾️','🅿️'];
+    emojis.forEach(e => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = e;
+        btn.style.fontSize = '1.3rem';
+        btn.style.margin = '2px';
+        btn.style.background = 'none';
+        btn.style.border = 'none';
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => {
+            blocks[idx].text += e;
+            renderBlocks();
+            picker.style.display = 'none';
+        };
+        picker.appendChild(btn);
+    });
+    picker.style.display = 'block';
+    picker.style.left = (event.clientX + 10) + 'px';
+    picker.style.top = (event.clientY + 10) + 'px';
+}
+window.addEventListener('click', function(e) {
+    const picker = document.getElementById('emoji-picker');
+    if (picker && !picker.contains(e.target) && !e.target.classList.contains('emoji-btn')) {
+        picker.style.display = 'none';
+    }
+});
+function exportMarkdown() {
+    const md = blocks.map(b => b.text).join('\n\n');
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = 'README.md';
+    a.click();
+    showToast('Markdown exported from ReadmeStudio!');
+    confettiBurst();
+}
+function exportHTML() {
+    const html = blocks.map(b => marked.parse(b.text)).join('<hr>');
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = 'README.html';
+    a.click();
+    showToast('HTML exported from ReadmeStudio!');
+    confettiBurst();
+}
+function exportPDF() {
+    alert('PDF export is not supported in block mode. Please use .md or .html export.');
+    showToast('PDF export not available in block mode.');
+    confettiBurst();
+}
+function copyMarkdown() {
+    const md = blocks.map(b => b.text).join('\n\n');
+    navigator.clipboard.writeText(md);
+    showToast('Markdown copied from ReadmeStudio!');
+    confettiBurst();
+}
+function uploadFile(event) {
+    const fileInput = event.target;
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Load as a single block
+            blocks = [{ type: 'description', text: e.target.result, collapsed: false }];
+            renderBlocks();
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+}
+function handleMdUpload(event) {
+    const fileInput = event.target;
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            document.getElementById('md-upload-preview').style.display = 'block';
+            document.getElementById('md-upload-preview-content').innerHTML = marked.parse(content);
+            window._mdUploadContent = content;
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+}
+function downloadMdAsPdf() {
+    const preview = document.getElementById('md-upload-preview-content');
+    if (!preview) return;
+    html2pdf().from(preview).set({
+        margin: 0.5,
+        filename: 'README.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }).save();
+}
+// License block settings modal
+function openLicenseSettings(idx) {
+    let modal = document.getElementById('license-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'license-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.3)';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.innerHTML = `<div style="background:#fff;padding:32px 24px;border-radius:12px;min-width:320px;box-shadow:0 2px 16px #0002;">
+            <h3 style="margin-top:0;color:#6366f1;">Select License</h3>
+            <select id="license-select" style="width:100%;padding:8px 10px;font-size:1rem;margin-bottom:18px;">
+                <option value="MIT">MIT License</option>
+                <option value="Apache-2.0">Apache 2.0 License</option>
+                <option value="GPL-3.0">GNU GPL v3</option>
+                <option value="BSD-3-Clause">BSD 3-Clause</option>
+                <option value="Unlicense">The Unlicense</option>
+            </select>
+            <button id="license-save-btn" style="background:#6366f1;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Save</button>
+            <button id="license-cancel-btn" style="margin-left:10px;background:#f3f4f6;color:#6366f1;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Cancel</button>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    document.getElementById('license-select').value = (blocks[idx].licenseType || 'MIT');
+    document.getElementById('license-save-btn').onclick = function() {
+        const val = document.getElementById('license-select').value;
+        blocks[idx].licenseType = val;
+        let text = '';
+        if (val === 'MIT') text = 'This project is licensed under the MIT License.';
+        else if (val === 'Apache-2.0') text = 'This project is licensed under the Apache 2.0 License.';
+        else if (val === 'GPL-3.0') text = 'This project is licensed under the GNU GPL v3.';
+        else if (val === 'BSD-3-Clause') text = 'This project is licensed under the BSD 3-Clause License.';
+        else if (val === 'Unlicense') text = 'This project is released to the public domain under The Unlicense.';
+        blocks[idx].text = text;
+        modal.style.display = 'none';
+        renderBlocks();
+    };
+    document.getElementById('license-cancel-btn').onclick = function() {
+        modal.style.display = 'none';
+    };
+}
+// Socials block settings modal
+function openSocialsSettings(idx) {
+    let modal = document.getElementById('socials-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'socials-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.3)';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.innerHTML = `<div style="background:#fff;padding:32px 24px;border-radius:12px;min-width:340px;box-shadow:0 2px 16px #0002;">
+            <h3 style="margin-top:0;color:#6366f1;">Add Social Links</h3>
+            <div id="socials-list"></div>
+            <button id="add-social-btn" style="background:#6366f1;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px;">Add Social</button>
+            <button id="socials-save-btn" style="background:#6366f1;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;margin-left:10px;">Save</button>
+            <button id="socials-cancel-btn" style="margin-left:10px;background:#f3f4f6;color:#6366f1;border:none;border-radius:6px;padding:8px 18px;font-size:1rem;font-weight:600;cursor:pointer;">Cancel</button>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+    // Social platforms
+    const platforms = [
+        { name: 'GitHub', icon: 'fa-github', prefix: 'https://github.com/' },
+        { name: 'Twitter', icon: 'fa-twitter', prefix: 'https://twitter.com/' },
+        { name: 'LinkedIn', icon: 'fa-linkedin', prefix: 'https://linkedin.com/in/' },
+        { name: 'Facebook', icon: 'fa-facebook', prefix: 'https://facebook.com/' },
+        { name: 'Instagram', icon: 'fa-instagram', prefix: 'https://instagram.com/' },
+        { name: 'Website', icon: 'fa-globe', prefix: '' }
+    ];
+    // Load socials from block
+    let socials = blocks[idx].socials || [];
+    function renderSocialsList() {
+        const list = modal.querySelector('#socials-list');
+        list.innerHTML = '';
+        socials.forEach((s, i) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.marginBottom = '8px';
+            // Platform select
+            const select = document.createElement('select');
+            platforms.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name;
+                opt.textContent = p.name;
+                if (p.name === s.platform) opt.selected = true;
+                select.appendChild(opt);
+            });
+            select.onchange = e => { socials[i].platform = e.target.value; };
+            row.appendChild(select);
+            // Username/input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'username or url';
+            input.value = s.value;
+            input.style.flex = '1';
+            input.oninput = e => { socials[i].value = e.target.value; };
+            row.appendChild(input);
+            // Remove button
+            const remove = document.createElement('button');
+            remove.innerHTML = '<i class="fa fa-trash"></i>';
+            remove.style.background = 'none';
+            remove.style.border = 'none';
+            remove.style.color = '#e53e3e';
+            remove.style.cursor = 'pointer';
+            remove.onclick = () => { socials.splice(i, 1); renderSocialsList(); };
+            row.appendChild(remove);
+            list.appendChild(row);
+        });
+    }
+    renderSocialsList();
+    document.getElementById('add-social-btn').onclick = function() {
+        socials.push({ platform: 'GitHub', value: '' });
+        renderSocialsList();
+    };
+    document.getElementById('socials-save-btn').onclick = function() {
+        blocks[idx].socials = socials;
+        // Generate markdown
+        let md = socials.map(s => {
+            const p = platforms.find(p => p.name === s.platform);
+            let url = p ? p.prefix + s.value : s.value;
+            if (p && p.name === 'Website') url = s.value;
+            return `- <i class=\"fa ${p.icon}\"></i> [${s.platform}](${url})`;
+        }).join('\n');
+        blocks[idx].text = md || 'Add your social links here.';
+        modal.style.display = 'none';
+        renderBlocks();
+    };
+    document.getElementById('socials-cancel-btn').onclick = function() {
+        modal.style.display = 'none';
+    };
+    modal.style.display = 'flex';
+}
+// --- Sidebar collapse ---
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
+let sidebarCollapsed = false;
+sidebarToggle.onclick = function() {
+    sidebarCollapsed = !sidebarCollapsed;
+    if (sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        sidebarToggleIcon.classList.remove('fa-chevron-left');
+        sidebarToggleIcon.classList.add('fa-chevron-right');
+        sidebarToggle.title = 'Expand sidebar';
+    } else {
+        sidebar.classList.remove('collapsed');
+        sidebarToggleIcon.classList.remove('fa-chevron-right');
+        sidebarToggleIcon.classList.add('fa-chevron-left');
+        sidebarToggle.title = 'Collapse sidebar';
+    }
+};
+sidebar.style.transition = 'transform 0.3s';
+// --- Toast notification ---
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(40px)';
+        setTimeout(() => { toast.style.display = 'none'; }, 400);
+    }, 1800);
+}
+// --- Confetti animation ---
+function confettiBurst() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+  const confetti = [];
+  for (let i = 0; i < 80; i++) {
+    confetti.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      r: 6 + Math.random() * 8,
+      d: 2 + Math.random() * 4,
+      color: `hsl(${Math.random()*360},80%,60%)`,
+      tilt: Math.random() * 10 - 5
+    });
+  }
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confetti.forEach(c => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI);
+      ctx.fillStyle = c.color;
+      ctx.fill();
+      c.y += c.d;
+      c.x += Math.sin(frame/10 + c.tilt) * 2;
+      c.tilt += Math.random() * 0.2 - 0.1;
+      if (c.y > canvas.height) c.y = -10;
+    });
+    frame++;
+    if (frame < 60) requestAnimationFrame(draw);
+    else canvas.style.display = 'none';
+  }
+  draw();
+}
+// --- Floating Add Block button for mobile ---
+const fab = document.getElementById('fab-add-block');
+function checkFab() {
+  if (window.innerWidth < 700) fab.style.display = 'flex';
+  else fab.style.display = 'none';
+}
+window.addEventListener('resize', checkFab);
+checkFab();
+fab.onclick = () => addBlock();
+// --- Table of Contents (TOC) ---
+function updateTOC() {
+  const toc = document.getElementById('toc');
+  const tocList = document.getElementById('toc-list');
+  tocList.innerHTML = '';
+  blocks.forEach((block, idx) => {
+    const li = document.createElement('li');
+    li.style.cursor = 'pointer';
+    li.style.color = 'var(--primary)';
+    li.style.fontWeight = '500';
+    li.textContent = (block.type.charAt(0).toUpperCase() + block.type.slice(1));
+    li.onclick = () => {
+      const el = document.getElementById('preview-' + idx) || document.querySelectorAll('.block-item')[idx];
+      if (el) el.scrollIntoView({behavior:'smooth',block:'center'});
+    };
+    tocList.appendChild(li);
+  });
+  toc.style.display = blocks.length > 2 ? 'block' : 'none';
+}
+// Call updateTOC after renderBlocks
+const origRenderBlocks = renderBlocks;
+renderBlocks = function() { origRenderBlocks(); updateTOC(); };
+// --- Tooltips for all icon buttons ---
+document.querySelectorAll('button, .block-actions button, .emoji-btn').forEach(btn => {
+    if (!btn.title && btn.innerText) btn.title = btn.innerText.trim();
+});
+// --- Animate dark mode toggle ---
+darkModeBtn.addEventListener('click', function() {
+    darkModeBtn.classList.add('spin');
+    setTimeout(() => darkModeBtn.classList.remove('spin'), 400);
+});
+// Initial render
+renderBlockTemplates();
+if (blocks.length === 0) addBlock('description');
+// --- Badge Picker Modal ---
+const badgeModal = document.getElementById('badge-modal');
+const badgeList = document.getElementById('badge-list');
+const badgeOptions = [
+  { name: 'Build', url: 'https://img.shields.io/badge/build-passing-brightgreen' },
+  { name: 'License', url: 'https://img.shields.io/badge/license-MIT-blue' },
+  { name: 'Coverage', url: 'https://img.shields.io/badge/coverage-100%25-brightgreen' },
+  { name: 'Version', url: 'https://img.shields.io/badge/version-1.0.0-blue' },
+  { name: 'Issues', url: 'https://img.shields.io/badge/issues-0-green' },
+  { name: 'Forks', url: 'https://img.shields.io/badge/forks-10-blue' },
+  { name: 'Stars', url: 'https://img.shields.io/badge/stars-100-yellow' },
+  { name: 'Twitter', url: 'https://img.shields.io/badge/twitter-@yourhandle-1da1f2' }
+];
+function openBadgeModal(idx) {
+  badgeModal.style.display = 'flex';
+  badgeList.innerHTML = '';
+  badgeOptions.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.name;
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '6px';
+    btn.style.padding = '6px 14px';
+    btn.style.fontWeight = '600';
+    btn.style.cursor = 'pointer';
+    btn.onclick = () => {
+      blocks[idx].text += ` ![${opt.name}](${opt.url})`;
+      renderBlocks();
+      badgeModal.style.display = 'none';
+    };
+    badgeList.appendChild(btn);
+  });
+  document.getElementById('add-badge-btn').onclick = function() {
+    const url = document.getElementById('custom-badge-url').value.trim();
+    if (url) {
+      blocks[idx].text += ` ![badge](${url})`;
+      renderBlocks();
+      badgeModal.style.display = 'none';
+    }
+  };
+  document.getElementById('close-badge-modal').onclick = function() {
+    badgeModal.style.display = 'none';
+  };
+}
+// Patch block actions for badges
+const origRenderBlocks2 = renderBlocks;
+renderBlocks = function() {
+  origRenderBlocks2();
+  // Add badge picker button to badges block
+  document.querySelectorAll('.block-item').forEach((el, idx) => {
+    if (blocks[idx].type === 'badges') {
+      let btn = document.createElement('button');
+      btn.innerHTML = '<i class="fa fa-plus-circle"></i> Add Badge';
+      btn.title = 'Add badge to ReadmeStudio README';
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#fff';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '6px';
+      btn.style.padding = '6px 14px';
+      btn.style.fontWeight = '600';
+      btn.style.cursor = 'pointer';
+      btn.onclick = () => openBadgeModal(idx);
+      el.querySelector('.block-content').appendChild(btn);
+    }
+  });
+  updateTOC();
+  lintBlocks();
+}
+// --- Table of Contents Block ---
+BLOCK_TEMPLATES.unshift({ type: 'toc', label: 'Table of Contents', icon: 'fa-list-ol', md: '[TOC will be auto-generated]' });
+// --- Inline help/examples for each block ---
+const blockHelp = {
+  description: 'Describe what your project does, who it is for, and why it matters.',
+  badges: 'Add status, license, or other badges to highlight your project.',
+  toc: 'A table of contents for easy navigation. Will be auto-generated.',
+  installation: 'How to install or set up your project. Include code snippets if possible.',
+  usage: 'Show how to use your project. Include code, commands, or screenshots.',
+  features: 'List the main features or benefits of your project.',
+  screenshots: 'Add images or GIFs to showcase your project.',
+  api: 'Document your API endpoints, parameters, and responses.',
+  contributing: 'Explain how others can contribute to your project.',
+  license: 'State the license for your project.',
+  author: 'Who created and maintains this project?',
+  acknowledgements: 'Thank those who helped or inspired you.'
+};
+// Patch block rendering to show help
+const origRenderBlocks3 = renderBlocks;
+renderBlocks = function() {
+  origRenderBlocks3();
+  document.querySelectorAll('.block-item').forEach((el, idx) => {
+    const help = blockHelp[blocks[idx].type];
+    if (help) {
+      let helpDiv = document.createElement('div');
+      helpDiv.textContent = help;
+      helpDiv.style.fontSize = '0.98rem';
+      helpDiv.style.color = 'var(--primary)';
+      helpDiv.style.marginBottom = '6px';
+      el.querySelector('.block-content').prepend(helpDiv);
+    }
+  });
+};
+// --- Linting/Validation ---
+function lintBlocks() {
+  const required = ['description','installation','usage','license'];
+  const missing = required.filter(t => !blocks.some(b => b.type === t));
+  const lintDiv = document.getElementById('lint-warning');
+  if (missing.length) {
+    document.getElementById('lint-msg').textContent = 'Recommended sections missing: ' + missing.map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(', ');
+    lintDiv.style.display = 'flex';
+  } else {
+    lintDiv.style.display = 'none';
+  }
+}
+// --- Export polish: always include TOC if present ---
+window.exportMarkdown = function() {
+    let md = blocks.map(b => {
+      if (b.type === 'toc') {
+        // Generate TOC from block titles
+        return blocks.map((block, idx) => `- [${block.type.charAt(0).toUpperCase()+block.type.slice(1)}](#${block.type}-${idx+1})`).join('\n');
+      }
+      return b.text;
+    }).join('\n\n');
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = 'README.md';
+    a.click();
+    showToast('Markdown exported from ReadmeStudio!');
+    confettiBurst();
+}
+// --- Upload .md Modal Logic ---
+const uploadMdBtn = document.getElementById('upload-md-btn');
+const uploadMdModal = document.getElementById('upload-md-modal');
+const uploadMdInput = document.getElementById('upload-md-input');
+const uploadMdProgressContainer = document.getElementById('upload-md-progress-container');
+const uploadMdProgressBar = document.getElementById('upload-md-progress-bar');
+const uploadMdProgressLabel = document.getElementById('upload-md-progress-label');
+const scanMdBtn = document.getElementById('scan-md-btn');
+const closeUploadMdModal = document.getElementById('close-upload-md-modal');
+let uploadedMdContent = '';
+uploadMdBtn.onclick = () => {
+  uploadMdModal.style.display = 'flex';
+  uploadMdInput.value = '';
+  scanMdBtn.disabled = true;
+  uploadMdProgressContainer.style.display = 'none';
+};
+closeUploadMdModal.onclick = () => {
+  uploadMdModal.style.display = 'none';
+};
+const chooseMdFileBtn = document.getElementById('choose-md-file-btn');
+const mdFileName = document.getElementById('md-file-name');
+chooseMdFileBtn.onclick = () => uploadMdInput.click();
+uploadMdInput.onchange = function() {
+  if (uploadMdInput.files.length > 0) {
+    mdFileName.textContent = uploadMdInput.files[0].name;
+    mdFileName.style.display = 'inline-block';
+    uploadMdProgressContainer.style.display = 'block';
+    uploadMdProgressBar.style.width = '0%';
+    uploadMdProgressLabel.textContent = '0%';
+    scanMdBtn.disabled = true;
+    const reader = new FileReader();
+    reader.onprogress = function(e) {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        uploadMdProgressBar.style.width = percent + '%';
+        uploadMdProgressLabel.textContent = percent + '%';
+      }
+    };
+    reader.onload = function(e) {
+      uploadedMdContent = e.target.result;
+      uploadMdProgressBar.style.width = '100%';
+      uploadMdProgressLabel.textContent = '100%';
+      setTimeout(() => {
+        uploadMdProgressContainer.style.display = 'none';
+      }, 400);
+      scanMdBtn.disabled = false;
+    };
+    reader.readAsText(uploadMdInput.files[0]);
+  } else {
+    mdFileName.textContent = '';
+    mdFileName.style.display = 'none';
+    uploadMdProgressContainer.style.display = 'none';
+  }
+};
+scanMdBtn.onclick = function() {
+  uploadMdModal.style.display = 'none';
+  showMdViewer(uploadedMdContent);
+};
+// --- README Viewer Modal Logic ---
+const mdViewerModal = document.getElementById('md-viewer-modal');
+const mdViewerContent = document.getElementById('md-viewer-content');
+const exportMdHtml = document.getElementById('export-md-html');
+const exportMdPdf = document.getElementById('export-md-pdf');
+const closeMdViewerModal = document.getElementById('close-md-viewer-modal');
+function showMdViewer(md) {
+  mdViewerContent.innerHTML = marked.parse(md);
+  mdViewerModal.style.display = 'flex';
+}
+closeMdViewerModal.onclick = () => {
+  mdViewerModal.style.display = 'none';
+};
+exportMdHtml.onclick = function() {
+  // Clone content into export container with solid background and dark text
+  const exportContainer = document.getElementById('md-export-container');
+  exportContainer.innerHTML = mdViewerContent.innerHTML;
+  exportContainer.style.display = 'block';
+  exportContainer.style.background = '#fff';
+  exportContainer.style.color = '#222';
+  exportContainer.style.padding = '32px';
+  exportContainer.style.fontSize = '1.05rem';
+  exportContainer.className = 'markdown-body';
+  // Inline GitHub markdown CSS
+  const githubCss = document.querySelector('link[href*="github-markdown.css"]');
+  let cssText = '';
+  if (githubCss) {
+    fetch(githubCss.href).then(r => r.text()).then(css => {
+      const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><style>${css}</style></head><body><div class='markdown-body' style='background:#fff;color:#222;padding:32px;'>${exportContainer.innerHTML}</div></body></html>`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      a.download = 'README.html';
+      a.click();
+      exportContainer.style.display = 'none';
+      showToast('HTML exported from ReadmeStudio!');
+      confettiBurst();
+    });
+  } else {
+    // fallback
+    const html = `<div class='markdown-body' style='background:#fff;color:#222;padding:32px;'>${exportContainer.innerHTML}</div>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = 'README.html';
+    a.click();
+    exportContainer.style.display = 'none';
+    showToast('HTML exported from ReadmeStudio!');
+    confettiBurst();
+  }
+};
+exportMdPdf.onclick = function() {
+  const exportContainer = document.getElementById('md-export-container');
+  exportContainer.innerHTML = mdViewerContent.innerHTML;
+  exportContainer.style.display = 'block';
+  exportContainer.style.background = '#fff';
+  exportContainer.style.color = '#222';
+  exportContainer.style.padding = '16px';
+  exportContainer.style.margin = '0';
+  exportContainer.style.width = '100%';
+  exportContainer.style.boxSizing = 'border-box';
+  exportContainer.style.position = 'static';
+  exportContainer.style.fontSize = '1.05rem';
+  exportContainer.className = 'markdown-body';
+  // Inject page-break CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    .markdown-body pre, .markdown-body table, .markdown-body blockquote {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+      break-after: avoid;
+      break-inside: avoid;
+    }
+    .markdown-body code, .markdown-body pre {
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+  `;
+  exportContainer.prepend(style);
+  html2pdf().from(exportContainer).set({
+    margin: 0.5,
+    filename: 'README.pdf',
+    html2canvas: { scale: 2, backgroundColor: '#fff' },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+  }).save().then(() => {
+    exportContainer.style.display = 'none';
+    showToast('PDF exported from ReadmeStudio!');
+    confettiBurst();
+  });
+};
+</script>
+{% endblock %} 
